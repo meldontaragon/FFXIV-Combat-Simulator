@@ -1,17 +1,23 @@
 from ffxivcalc.Jobs.Base_Spell import Potion, Spell
-Lock = 0
-class MeleeSpell(Spell):
+from ffxivcalc.Jobs.PlayerEnum import SpeedEnum
 
-    def __init__(self, id, GCD, CastTime, RecastTime, Potency, ManaCost, Effect, Requirement):
-        super().__init__(id, GCD, CastTime, RecastTime, Potency, ManaCost, Effect, Requirement)
+Lock = 0
+
+
+class MeleeSpell(Spell):
+    def __init__(
+        self, id, GCD, CastTime, RecastTime, Potency, ManaCost, Effect, Requirement, SSType: SpeedEnum = SpeedEnum.SkS
+    ):
+        super().__init__(id, GCD, CastTime, RecastTime, Potency, ManaCost, Effect, Requirement, SSType=SSType)
+
 
 #########################################
 ########## NINJA SPELL  #################
 #########################################
 
-class NinjaSpell(MeleeSpell):
 
-    def __init__(self, id, GCD, CastTime, RecastTime, Potency, Effect, Requirement,Weaponskill, Ninjutsu):
+class NinjaSpell(MeleeSpell):
+    def __init__(self, id, GCD, CastTime, RecastTime, Potency, Effect, Requirement, Weaponskill, Ninjutsu):
         super().__init__(id, GCD, CastTime, RecastTime, Potency, 0, Effect, Requirement)
         self.Weaponskill = Weaponskill
         self.Ninjutsu = Ninjutsu
@@ -21,6 +27,7 @@ class NinjaSpell(MeleeSpell):
 ########## SAMURAI PLAYER ###############
 #########################################
 
+
 class SamuraiSpell(MeleeSpell):
     def __init__(self, id, GCD, CastTime, RecastTime, Potency, Effect, Requirement, KenkiCost):
         super().__init__(id, GCD, CastTime, RecastTime, Potency, 0, Effect, Requirement)
@@ -28,13 +35,16 @@ class SamuraiSpell(MeleeSpell):
         self.KenkiCost = KenkiCost
         self.Requirement += [KenkiRequirement]
 
-def KenkiRequirement(Player, Spell): #By default present in Samurai spell requirements
-    #input("Current Gauge is " + str(Player.KenkiGauge - Spell.KenkiCost))
+
+def KenkiRequirement(Player, Spell):  # By default present in Samurai spell requirements
+    # input("Current Gauge is " + str(Player.KenkiGauge - Spell.KenkiCost))
     return Spell.KenkiCost <= Player.KenkiGauge, -1
+
 
 #########################################
 ########## DRAGOON PLAYER ###############
 #########################################
+
 
 class DragoonSpell(MeleeSpell):
     def __init__(self, id, GCD, RecastTime, Potency, Effect, Requirement, Weaponskill):
@@ -42,9 +52,11 @@ class DragoonSpell(MeleeSpell):
 
         self.Weaponskill = Weaponskill
 
+
 #########################################
 ########## MONK SPELL ###############
 #########################################
+
 
 class MonkSpell(MeleeSpell):
     def __init__(self, id, GCD, RecastTime, Potency, Effect, Requirement, Weaponskill, MasterfulBlitz):
@@ -53,55 +65,79 @@ class MonkSpell(MeleeSpell):
         self.Weaponskill = Weaponskill
         self.MasterfulBlitz = MasterfulBlitz
 
+
 #########################################
 ########## MONK SPELL ###############
 #########################################
 
+
 class ReaperSpell(MeleeSpell):
-    def __init__(self, id, GCD, CastTime,RecastTime, Potency, Effect, Requirement, Weaponskill):
-        super().__init__(id, GCD, CastTime, RecastTime, Potency, 0, Effect, Requirement)
+    def __init__(
+        self,
+        id,
+        GCD,
+        CastTime,
+        RecastTime,
+        Potency,
+        Effect,
+        Requirement,
+        Weaponskill,
+        SSType: SpeedEnum = SpeedEnum.SkS,
+    ):
+        super().__init__(id, GCD, CastTime, RecastTime, Potency, 0, Effect, Requirement, SSType=SSType)
 
         self.Weaponskill = Weaponskill
 
 
+# Class action spell
 
-#Class action spell
+# Requirement
 
-#Requirement
 
 def SecondWindRequirement(Player, Spell):
     return Player.SecondWindCD <= 0, Player.SecondWindCD
 
+
 def LegSweepRequirement(Player, Spell):
     return Player.LegSweepCD <= 0, Player.LegSweepCD
+
 
 def BloodbathRequirement(Player, Spell):
     return Player.BloodbathCD <= 0, Player.BloodbathCD
 
+
 def FeintRequirement(Player, Spell):
     return Player.FeintCD <= 0, Player.FeintCD
+
 
 def ArmLengthRequirement(Player, Spell):
     return Player.ArmLengthCD <= 0, Player.ArmLengthCD
 
+
 def TrueNorthRequirement(Player, Spell):
     return Player.TrueNorthStack > 0, Player.TrueNorthCD
 
-#Apply
+
+# Apply
 def ApplySecondWind(Player, Enemy):
     Player.SecondWindCD = 120
+
 
 def ApplyLegSweep(Player, Enemy):
     Player.LegSweepCD = 40
 
+
 def ApplyBloodbath(Player, Enemy):
     Player.BloodbathCD = 90
+
 
 def ApplyFeint(Player, Enemy):
     Player.FeintCD = 90
 
+
 def ApplyArmLength(Player, Enemy):
     Player.ArmLengthCD = 120
+
 
 def ApplyTrueNorth(Player, Enemy):
     if Player.TrueNorthStack == 2:
@@ -110,7 +146,8 @@ def ApplyTrueNorth(Player, Enemy):
     Player.TrueNorthStack -= 1
 
 
-#Check
+# Check
+
 
 def TrueNorthStackCheck(Player, Enemy):
     if Player.TrueNorthCD <= 0:
@@ -119,7 +156,9 @@ def TrueNorthStackCheck(Player, Enemy):
         else:
             Player.TrueNorthCD = 45
         Player.TrueNorthStack += 1
-#Class Action (no effect as of now)
+
+
+# Class Action (no effect as of now)
 SecondWind = MeleeSpell(7541, False, Lock, 0, 0, 0, ApplySecondWind, [SecondWindRequirement])
 LegSweep = MeleeSpell(7863, False, Lock, 0, 0, 0, ApplyLegSweep, [LegSweepRequirement])
 Bloodbath = MeleeSpell(7542, False, Lock, 0, 0, 0, ApplyBloodbath, [BloodbathRequirement])
@@ -128,15 +167,15 @@ ArmLength = MeleeSpell(7548, False, Lock, 0, 0, 0, ApplyArmLength, [ArmLengthReq
 TrueNorth = MeleeSpell(7546, False, Lock, 0, 0, 0, ApplyTrueNorth, [TrueNorthRequirement])
 
 MeleeAbility = {
-7541 : SecondWind,
-7863 : LegSweep,
-7542 : Bloodbath,
-7549 : Feint,
-7546 : TrueNorth,
-7548 : ArmLength,
-34590541 : Potion,  #STR
-34590542 : Potion,   #DEX,
-34592395 : Potion, # STR 7
-34592396 : Potion, # DEX 7
--2 : Potion
+    7541: SecondWind,
+    7863: LegSweep,
+    7542: Bloodbath,
+    7549: Feint,
+    7546: TrueNorth,
+    7548: ArmLength,
+    34590541: Potion,  # STR
+    34590542: Potion,  # DEX,
+    34592395: Potion,  # STR 7
+    34592396: Potion,  # DEX 7
+    -2: Potion,
 }

@@ -5,7 +5,10 @@ from ffxivcalc.Jobs.Base_Spell import DOTSpell, Potion, buff, empty
 import copy
 from ffxivcalc.Jobs.Player import Pet
 from ffxivcalc.Jobs.Tank.Tank_Spell import BigMit, DRKSkill
+from ffxivcalc.Jobs.PlayerEnum import SpeedEnum
+
 Lock = 0
+
 
 def BloodRequirement(Player, Spell):
     if Player.DeliriumStacks > 0 and (Spell.id == Bloodspiller.id or Spell.id == Quietus.id):
@@ -17,8 +20,9 @@ def BloodRequirement(Player, Spell):
         return True, -1
     return False, -1
 
+
 def EdgeShadowRequirement(Player, Spell):
-    if Player.EdgeShadowCD <= 0 :
+    if Player.EdgeShadowCD <= 0:
         if Player.DarkArts:
             Spell.ManaCost = 0
             Player.DarkArts = False
@@ -29,23 +33,30 @@ def EdgeShadowRequirement(Player, Spell):
         return True, -1
     return False, -1
 
+
 def BloodWeaponRequirement(Player, Spell):
     return Player.BloodWeaponCD <= 0, Player.BloodWeaponCD
+
 
 def DeliriumRequirement(Player, Spell):
     return Player.DeliriumCD <= 0, Player.DeliriumCD
 
+
 def CarveSpitRequirement(Player, Spell):
     return Player.CarveSpitCD <= 0, Player.CarveSpitCD
+
 
 def AbyssalDrainRequirement(Player, Spell):
     return Player.AbyssalDrainCD <= 0, Player.AbyssalDrainCD
 
+
 def SaltedEarthRequirement(Player, Spell):
     return Player.SaltedEarthCD <= 0, Player.SaltedEarthCD
 
+
 def SaltDarknessRequirement(Player, Spell):
     return Player.SaltedEarthTimer > 0, -1
+
 
 def ShadowbringerRequirement(Player, Spell):
     return Player.DarksideTimer > 0 and Player.ShadowbringerCharges > 0, -1
@@ -54,30 +65,38 @@ def ShadowbringerRequirement(Player, Spell):
 def PlungeRequirement(Player, Spell):
     return Player.PlungeCharges > 0, Player.PlungeCD
 
+
 def TBNRequirement(Player, Spell):
     if Player.Mana >= Spell.ManaCost:
         Player.Mana -= Spell.ManaCost
         return True, -1
     return True, -1
 
+
 def LivingDeadRequirement(Player, Spell):
     return Player.LivingDeadCD <= 0, Player.LivingDeadCD
+
 
 def DarkMindRequirement(Player, Spell):
     return Player.DarkMindCD <= 0, Player.DarkMindCD
 
+
 def DarkMissionaryRequirement(Player, Spell):
     return Player.DarkMissionaryCD <= 0, Player.DarkMissionaryCD
+
 
 def OblationRequirement(Player, Spell):
     return Player.OblationStack > 0, Player.OblationCD
 
-#Effect functions that persist after action use
+
+# Effect functions that persist after action use
+
 
 def BloodWeaponEffect(Player, Spell):
     if Spell.GCD:
         Player.Mana = min(Player.Mana + 600, 10000)
         Player.Blood = min(100, Player.Blood + 10)
+
 
 def DeliriumEffect(Player, Spell):
     if Spell.id == Bloodspiller.id:
@@ -85,13 +104,16 @@ def DeliriumEffect(Player, Spell):
     elif Spell.id == Quietus.id:
         Player.Mana = min(Player.Mana + 500, 10000)
 
+
 def HardSlashEffect(Player, Spell):
     if Spell.id == SyphonStrike.id:
         Spell.Potency += 140
         Player.Mana = min(Player.Mana + 600, 10000)
-        
+
         Player.EffectToRemove.append(HardSlashEffect)
-        if not SyphonStrikeEffect in Player.EffectList : Player.EffectList.append(SyphonStrikeEffect)
+        if not SyphonStrikeEffect in Player.EffectList:
+            Player.EffectList.append(SyphonStrikeEffect)
+
 
 def SyphonStrikeEffect(Player, Spell):
     if Spell.id == Souleater.id:
@@ -99,7 +121,9 @@ def SyphonStrikeEffect(Player, Spell):
         Player.Blood = min(100, Player.Blood + 20)
         Player.EffectToRemove.append(SyphonStrikeEffect)
 
-#Cooldown checks to remove effect and restore charges
+
+# Cooldown checks to remove effect and restore charges
+
 
 def OblationStackCheck(Player, Spell):
     if Player.OblationCD <= 0:
@@ -109,15 +133,18 @@ def OblationStackCheck(Player, Spell):
             Player.OblationCD = 60
         Player.OblationStack += 1
 
+
 def BloodWeaponCheck(Player, Spell):
     if Player.BloodWeaponTimer <= 0 or Player.BloodWeaponStacks == 0:
         Player.EffectList.remove(BloodWeaponEffect)
         Player.EffectToRemove.append(BloodWeaponCheck)
 
+
 def DeliriumCheck(Player, Spell):
     if Player.DeliriumTimer <= 0 or Player.DeliriumStacks == 0:
         Player.EffectList.remove(DeliriumEffect)
         Player.EffectToRemove.append(DeliriumCheck)
+
 
 def SaltedEarthCheck(Player, Spell):
     if Player.SaltedEarthTimer <= 0:
@@ -126,13 +153,15 @@ def SaltedEarthCheck(Player, Spell):
         Player.SaltedEarthTimer = 0
         Player.EffectToRemove.append(SaltedEarthCheck)
 
+
 def CheckShadowbringerCharge(Player, Enemy):
     if Player.ShadowbringerCD <= 0:
         if Player.ShadowbringerCharges == 0:
             Player.ShadowbringerCD = 30
         if Player.ShadowbringerCharges == 1:
             Player.EffectToRemove.append(CheckShadowbringerCharge)
-        Player.ShadowbringerCharges +=1
+        Player.ShadowbringerCharges += 1
+
 
 def CheckPlungeCharge(Player, Enemy):
     if Player.PlungeCD <= 0:
@@ -140,7 +169,8 @@ def CheckPlungeCharge(Player, Enemy):
             Player.PlungeCD = 30
         if Player.PlungeCharges == 1:
             Player.EffectToRemove.append(CheckPlungeCharge)
-        Player.PlungeCharges +=1
+        Player.PlungeCharges += 1
+
 
 def UnleashCombo(Player, Spell):
     if Spell.id == StalwartSoul.id:
@@ -148,33 +178,42 @@ def UnleashCombo(Player, Spell):
         Player.Blood = min(100, Player.Blood + 20)
 
 
-#Apply effects that happen upon action use
+# Apply effects that happen upon action use
+
 
 def ApplyLivingDead(Player, Enemy):
     Player.LivingDeadCD = 300
 
+
 def ApplyUnleash(Player, Spell):
-    if not (UnleashCombo in Player.EffectList) : Player.EffectList.append(UnleashCombo)
+    if not (UnleashCombo in Player.EffectList):
+        Player.EffectList.append(UnleashCombo)
+
 
 def ApplyHardSlashEffect(Player, Spell):
-    if not (HardSlashEffect in Player.EffectList) : Player.EffectList.append(HardSlashEffect)
+    if not (HardSlashEffect in Player.EffectList):
+        Player.EffectList.append(HardSlashEffect)
+
 
 def ApplySyphonEffect(Player, Spell):
     pass
 
+
 def ApplyBloodWeaponEffect(Player, Spell):
-    Player.BloodWeaponCD = 60                     
+    Player.BloodWeaponCD = 60
     Player.EffectList.append(BloodWeaponEffect)
     Player.BloodWeaponStacks = 5
     Player.BloodWeaponTimer = 15
     Player.EffectCDList.append(BloodWeaponCheck)
 
+
 def ApplyDeliriumEffect(Player, Spell):
     Player.DeliriumCD = 60
     Player.EffectList.append(DeliriumEffect)
     Player.DeliriumStacks = 3
-    Player.DeliriumTimer = 30 
+    Player.DeliriumTimer = 30
     Player.EffectCDList.append(DeliriumCheck)
+
 
 def ApplyEdgeShadowEffect(Player, Spell):
     Player.DarksideTimer = min(60, Player.DarksideTimer + 30)
@@ -182,19 +221,23 @@ def ApplyEdgeShadowEffect(Player, Spell):
         Player.buffList.append(EdgeShadowBuff)
         Player.EffectCDList.append(CheckEdgeShadow)
 
+
 def CheckEdgeShadow(Player, Enemy):
     if Player.DarksideTimer <= 0:
         Player.buffList.remove(EdgeShadowBuff)
         Player.EffectCDList.remove(CheckEdgeShadow)
+
 
 def ApplyCarveSpitEffect(Player, Spell):
     Player.CarveSpitCD = 60
     Player.AbyssalDrainCD = 60
     Player.Mana = min(Player.Mana + 600, 10000)
 
+
 def ApplyAbyssalDrainEffect(Player, Spell):
     Player.AbyssalDrainCD = 60
     Player.CarveSpitCD = 60
+
 
 def ApplySaltedEarth(Player, Spell):
     Player.SaltedEarthCD = 90
@@ -203,41 +246,57 @@ def ApplySaltedEarth(Player, Spell):
     Player.DOTList.append(Player.SaltedEarthDOT)
     Player.EffectCDList.append(SaltedEarthCheck)
 
+
 def ApplySaltDarknessEffect(Player, Spell):
     Player.SaltDarknessCD = 15
 
+
 def SpendShadowbringer(Player, Spell):
-    if Player.ShadowbringerCharges == 2 :
+    if Player.ShadowbringerCharges == 2:
         Player.ShadowbringerCD = 60
     Player.ShadowbringerCharges -= 1
     Player.EffectCDList.append(CheckShadowbringerCharge)
 
+
 def SummonLivingShadow(Player, Spell):
 
-    if Player.Pet == None : 
-        Pet(Player) # Creating a pet
+    if Player.Pet == None:
+        Pet(Player)  # Creating a pet
     else:
         Player.Pet.ResetStat()
 
-    Actions = [PDelay, PAbyssalDrain, PPlunge, PShadowbringer, PEdgeShadow, PBloodspiller, PCarveSpit] #This should take 20 seconds
+    Actions = [
+        PDelay,
+        PAbyssalDrain,
+        PPlunge,
+        PShadowbringer,
+        PEdgeShadow,
+        PBloodspiller,
+        PCarveSpit,
+    ]  # This should take 20 seconds
     Player.Pet.ActionSet = Actions
-    Player.Pet.TrueLock = False #Delocking
-    Player.Pet.NextSpell = 0 #Reseting
+    Player.Pet.TrueLock = False  # Delocking
+    Player.Pet.NextSpell = 0  # Reseting
 
-def SpendPlunge(Player,Spell):
-    if Player.PlungeCharges == 2 :
+
+def SpendPlunge(Player, Spell):
+    if Player.PlungeCharges == 2:
         Player.PlungeCD = 30
     Player.PlungeCharges -= 1
     Player.EffectCDList.append(CheckPlungeCharge)
 
+
 def ApplyDarkArts(Player, Spell):
     Player.DarkArts = True
+
 
 def ApplyDarkMind(Player, Spell):
     Player.DarkMindCD = 60
 
+
 def ApplyDarkMissionary(Player, Enemy):
     Player.DarkMissionaryCD = 90
+
 
 def ApplyOblation(Player, Enemy):
     if Player.OblationStack == 2:
@@ -245,41 +304,46 @@ def ApplyOblation(Player, Enemy):
         Player.OblationCD = 60
     Player.OblationStack -= 1
 
-#List of Weaponskills and Spells used by a Dark Knight Player.
-DRKGCD = 2.5         #GCD speed
-Lock = 0            #Fixed value for animation lock.
+
+# List of Weaponskills and Spells used by a Dark Knight Player.
+DRKGCD = 2.5  # GCD speed
+Lock = 0  # Fixed value for animation lock.
 
 HardSlash = DRKSkill(3617, True, Lock, DRKGCD, 170, 0, 0, ApplyHardSlashEffect, [])
 SyphonStrike = DRKSkill(3623, True, Lock, DRKGCD, 120, 0, 0, empty, [])
 Souleater = DRKSkill(3632, True, Lock, DRKGCD, 120, 0, 0, empty, [])
 Bloodspiller = DRKSkill(7392, True, Lock, DRKGCD, 500, 0, 50, empty, [BloodRequirement])
 Quietus = DRKSkill(5, True, Lock, DRKGCD, 200, 0, 50, empty, [BloodRequirement])
-Unmend = DRKSkill(3624, True, Lock, 2.50, 150, 0, 0, empty, [])
+Unmend = DRKSkill(3624, True, Lock, 2.50, 150, 0, 0, empty, [], SSType=SpeedEnum.SpS)
 
-#List of Buffs used by a Dark Knight Player.
+# List of Buffs used by a Dark Knight Player.
 
 BloodWeapon = DRKSkill(3625, False, Lock, 0, 0, 0, 0, ApplyBloodWeaponEffect, [BloodWeaponRequirement])
 Delirium = DRKSkill(7390, False, Lock, 0, 0, 0, 0, ApplyDeliriumEffect, [DeliriumRequirement])
 
-#List of Abilities used by a Dark Knight Player.
+# List of Abilities used by a Dark Knight Player.
 
 EdgeShadow = DRKSkill(16470, False, Lock, 0, 460, 3000, 0, ApplyEdgeShadowEffect, [EdgeShadowRequirement])
 FloodShadow = DRKSkill(10, False, Lock, 0, 160, 3000, 0, ApplyEdgeShadowEffect, [EdgeShadowRequirement])
 CarveSpit = DRKSkill(3643, False, Lock, 0, 510, 0, 0, ApplyCarveSpitEffect, [CarveSpitRequirement])
 AbyssalDrain = DRKSkill(12, False, Lock, 0, 150, 0, 0, ApplyAbyssalDrainEffect, [AbyssalDrainRequirement])
-SaltedEarth = DRKSkill(3639, False, Lock, 0, 0, 0, 0, ApplySaltedEarth, [SaltedEarthRequirement]) #Ground target DOT, ticks once upon placement.
+SaltedEarth = DRKSkill(
+    3639, False, Lock, 0, 0, 0, 0, ApplySaltedEarth, [SaltedEarthRequirement]
+)  # Ground target DOT, ticks once upon placement.
 SaltedEarthDOT = DOTSpell(-14, 50, True)
 SaltDarkness = DRKSkill(25755, False, Lock, 0, 500, 0, 0, empty, [SaltDarknessRequirement])
 Shadowbringer = DRKSkill(25757, False, Lock, 0, 600, 0, 0, SpendShadowbringer, [ShadowbringerRequirement])
 LivingShadow = DRKSkill(16472, False, Lock, 0, 0, 0, 50, SummonLivingShadow, [BloodRequirement])
 Plunge = DRKSkill(3640, False, Lock, 0, 150, 0, 0, SpendPlunge, [PlungeRequirement])
 
-TBN = DRKSkill(7393, False, Lock, 0, 0, 3000, 0, ApplyDarkArts, [TBNRequirement])     #Simply makes the next EdgeShadow free for now.
+TBN = DRKSkill(
+    7393, False, Lock, 0, 0, 3000, 0, ApplyDarkArts, [TBNRequirement]
+)  # Simply makes the next EdgeShadow free for now.
 
-#AOE GCD
-Unleash = DRKSkill(20, True, 0, 2.5, 120, 0, 0, ApplyUnleash, [])
-StalwartSoul = DRKSkill(21, True, 0, 2.5, 100, 0, 0, empty, [])
-#List of Abilities performed by Living Shadow.
+# AOE GCD
+Unleash = DRKSkill(20, True, 0, 2.5, 120, 0, 0, ApplyUnleash, [], SSType=SpeedEnum.SpS)
+StalwartSoul = DRKSkill(21, True, 0, 2.5, 100, 0, 0, empty, [], SSType=SpeedEnum.SpS)
+# List of Abilities performed by Living Shadow.
 
 PAbyssalDrain = DRKSkill(22, True, 0.5, 2.33, 350, 0, 0, empty, [])
 PPlunge = DRKSkill(23, True, 0.5, 2.33, 350, 0, 0, empty, [])
@@ -287,16 +351,16 @@ PShadowbringer = DRKSkill(25, True, 0.5, 2.33, 500, 0, 0, empty, [])
 PEdgeShadow = DRKSkill(26, True, 0.5, 2.33, 350, 0, 0, empty, [])
 PBloodspiller = DRKSkill(27, True, 0.5, 2.33, 350, 0, 0, empty, [])
 PCarveSpit = DRKSkill(28, True, 0.5, 2.33, 350, 0, 0, empty, [])
-PDelay = DRKSkill(29, True, 0, 6, 0, 0, 0, empty, [])    #6s animation before it starts attacking.
+PDelay = DRKSkill(29, True, 0, 6, 0, 0, 0, empty, [])  # 6s animation before it starts attacking.
 
-#Living Shadow 
+# Living Shadow
 
-#Mit
+# Mit
 LivingDead = DRKSkill(3638, False, 0, 0, 0, 0, 0, ApplyLivingDead, [LivingDeadRequirement])
 DarkMind = DRKSkill(3634, False, 0, 0, 0, 0, 0, ApplyDarkMind, [DarkMindRequirement])
 DarkMissionary = DRKSkill(16471, False, 0, 0, 0, 0, 0, ApplyDarkMissionary, [DarkMissionaryRequirement])
 Oblation = DRKSkill(25754, False, 0, 0, 0, 0, 0, ApplyOblation, [OblationRequirement])
-#buff
+# buff
 EdgeShadowBuff = buff(1.1)
 
 # Maps Ability IDs from FFlogs to Skill objects
@@ -322,5 +386,5 @@ DarkKnightAbility = {
     25754: Oblation,
     25755: SaltDarkness,
     25757: Shadowbringer,
-    34590541: Potion  # This is assumed to be strength pot grade 6
+    34590541: Potion,  # This is assumed to be strength pot grade 6
 }

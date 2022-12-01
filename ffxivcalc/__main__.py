@@ -8,6 +8,7 @@ from ffxivcalc.UI.SimulationInput import ExecuteMemoryCode as fight_main
 from ffxivcalc.Tester.Tester import Tester
 from ffxivcalc.UI.TUI import TUI_draw
 
+
 def get_parser() -> ArgumentParser:
     """Defines all the cli arguments to be parsed
 
@@ -40,7 +41,7 @@ def main() -> int:
     """
     parser = get_parser()
     args = parser.parse_args()
-    #input(args)
+    # input(args)
 
     match args.action:
         case 'simulate':
@@ -49,7 +50,7 @@ def main() -> int:
             Tester(args.json).Test()
         case 'tui':
             TUI_draw()
-        case _: # default case
+        case _:  # default case
             parser.print_help()
 
     return 0
